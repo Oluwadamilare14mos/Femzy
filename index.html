@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DamiTools — Electricals • Lighting • Gadgets</title>
+<meta name="description" content="DamiTools - electrical tools, lighting, gadgets. Download app / shop online." />
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+  <!-- header -->
+  <header>
+    <div class="brand">
+      <div class="logo">DT</div>
+      <div>
+        <h1 style="margin:0;font-size:16px">DamiTools</h1>
+        <div class="muted-small">Electricals • Lighting • Gadgets</div>
+      </div>
+    </div>
+
+    <div class="navlinks" aria-label="Main navigation">
+      <a href="index.html" id="navHome" class="active">Home</a>
+      <a href="#" id="navCategories">Categories</a>
+      <a href="#" id="navCart">Cart <span id="miniCartCount" class="cart-count" style="display:inline-block;margin-left:6px">0</span></a>
+      <button type="button" class="iconbtn" id="openMenuBtn" title="Menu">☰</button>
+    </div>
+  </header>
+
+  <!-- categories floating -->
+  <div id="catModal" class="cat-modal" role="dialog" aria-modal="false" aria-hidden="true">
+    <strong>Categories</strong>
+    <div style="margin-top:8px" class="cat-list" id="catList"></div>
+  </div>
+
+  <!-- search / toolbar -->
+  <div class="toolbar">
+    <div class="search" style="width:100%">
+      <input id="searchInput" placeholder="Search products (e.g. wire, switch, fan)" />
+      <button type="button" class="iconbtn" id="cameraBtn" title="Search by photo">📷</button>
+    </div>
+  </div>
+
+  <!-- main -->
+  <main>
+    <!-- hero -->
+    <section style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px">
+        <h2 style="margin:6px 0 8px">Shop top electrical tools & gadgets</h2>
+        <p class="muted-small">Fast delivery • Safe payment • 24/7 support</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a id="downloadAppBtn" href="https://expo.dev/accounts/oluwadamiloremose/projects/DamiTools/builds/dae29279-7512-4ffc-b646-686c42152592" target="_blank" rel="noopener noreferrer" class="btn">📥 Download DT App</a>
+        <button type="button" id="openCartBtn" class="btn-outline">Open Cart</button>
+      </div>
+    </section>
+
+    <!-- product grid -->
+    <section>
+      <div id="productGrid" class="grid" aria-live="polite"></div>
+    </section>
+
+    <!-- placeholder for empty state -->
+    <div id="emptyState" class="muted" style="text-align:center;padding:24px;display:none">No products</div>
+
+    <footer>
+      <div class="footer-links">
+        <a href="mailto:damitools14@gmail.com">Email</a>
+        <a href="tel:09036470778">Customer Service: 09036470778</a>
+        <a id="whatsappLink" href="https://wa.me/2347054700008" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a href="login.html">Login</a>
+        <a href="https://twitter.com/DamiTools14" target="_blank" rel="noopener noreferrer">Twitter</a>
+        <a href="https://instagram.com/damitools.ng" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a href="https://m.facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
+      </div>
+      <div style="margin-top:8px" class="muted-small">© 2025 DamiTools — Free delivery above ₦20,000</div>
+    </footer>
+  </main>
+
+  <!-- menu panel (shared) -->
+  <aside id="menuPanel" class="menu-panel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>Menu</strong>
+      <button type="button" id="closeMenuBtn" class="iconbtn">✕</button>
+    </div>
+
+    <div class="menu-avatar" style="margin-top:12px">
+      <img id="menuAvatarImg" src="https://i.imgur.com/6VBx3io.png" alt="avatar" />
+      <div>
+        <div id="menuAvatarName" style="font-weight:800">Guest</div>
+        <div class="muted-small" id="menuAvatarEmail">damitools14@gmail.com</div>
+      </div>
+    </div>
+
+    <!-- Avatar edit area -->
+    <div id="avatarEdit" class="avatar-edit" style="display:none">
+      <label style="font-size:13px">Change profile photo</label>
+      <input id="fileInput" class="input-file" type="file" accept="image/*" capture="environment" />
+      <div style="display:flex;gap:8px">
+        <button type="button" id="uploadBtn" class="btn-outline">Choose photo</button>
+        <button type="button" id="takePhotoBtn" class="btn">Use camera</button>
+      </div>
+      <div id="avatarPreview" style="margin-top:8px"></div>
+    </div>
+
+    <ul class="menu-list">
+      <li><a href="#" id="menuProfile">Account / Profile</a></li>
+      <li><a href="#" id="menuSupport">Help & Support</a></li>
+      <li><a href="tel:09036470778">Customer Service: 09036470778</a></li>
+      <li><a href="mailto:damitools14@gmail.com">Email Us</a></li>
+      <li><a id="menuWhats" href="https://wa.me/2347054700008" target="_blank" rel="noopener noreferrer">WhatsApp: 07054700008</a></li>
+      <li><a href="#" id="menuAbout">About Website</a></li>
+      <li><a id="menuDownload" href="https://expo.dev/accounts/oluwadamiloremose/projects/DamiTools/builds/dae29279-7512-4ffc-b646-686c42152592" target="_blank" rel="noopener noreferrer">📥 Download DamiTools App</a></li>
+      <li><a href="#" id="signOutBtn" style="color:var(--danger)">Sign out</a></li>
+    </ul>
+
+    <div style="margin-top:12px">
+      <div class="muted-small">Theme</div>
+      <button type="button" id="themeToggle" class="iconbtn" style="margin-top:6px">Toggle Dark</button>
+    </div>
+  </aside>
+
+  <!-- about modal (kept) -->
+  <div id="aboutModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>About DamiTools</h3>
+      <p class="muted-small">DamiTools is an online store for electricals, lighting, gadgets and accessories. Download the DamiTools app from the menu or buy from the site. Customer support: 09036470778 — damitools14@gmail.com</p>
+      <div style="text-align:right;margin-top:12px">
+        <button type="button" id="closeAboutBtn" class="iconbtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- product detail modal (kept in index for quick preview) -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal" id="productModal">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="width:320px">
+          <img id="detailMainImg" src="" alt="product" style="width:100%;height:320px;object-fit:cover;border-radius:8px" />
+          <div class="thumbs" id="detailThumbs"></div>
+        </div>
+        <div style="flex:1;min-width:260px">
+          <h3 id="detailName" style="margin:0 0 6px"></h3>
+          <div class="muted-small" id="detailCat"></div>
+          <div style="margin:8px 0" class="price" id="detailPrice"></div>
+          <p id="detailDesc" class="muted-small">Product description...</p>
+
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+            <input id="detailQty" type="number" value="1" min="1" style="width:86px;padding:8px;border-radius:8px;border:1px solid #e6e6e6" />
+            <button type="button" id="detailAddBtn" class="btn">Add to Cart</button>
+            <button type="button" id="detailAppBtn" class="btn-outline">Open in App / APK</button>
+          </div>
+          <div style="margin-top:12px" id="similarWrap"></div>
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:12px">
+        <button type="button" id="closeModalBtn" class="iconbtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- cart / checkout panel (mini) -->
+  <div class="cart-panel" id="floatingCart">
+    <div>
+      <strong>Cart</strong>
+      <div class="muted-small" style="font-size:12px">Items: <span id="cartCount">0</span></div>
+    </div>
+    <div style="min-width:140px;text-align:right">
+      <div class="muted-small">Total</div>
+      <div id="cartTotal" style="font-weight:800">₦0</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button type="button" id="goToCartBtn" class="btn-outline">View</button>
+      <button type="button" id="checkoutPanelBtn" class="btn">Checkout</button>
+    </div>
+  </div>
+
+  <!-- Firebase + storage (kept scripts in main.js) -->
+  <script src="main.js"></script>
+</body>
+</html>
