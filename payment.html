@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">  
+<head>  
+  <meta charset="utf-8"/>  
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>  
+  <title>DamiTools — Payment</title>  
+  <meta name="description" content="Complete payment for DamiTools order" />  
+  <style>  
+    :root{ --bg:#f6f7fb; --card:#fff; --text:#111; --muted:#666; --brand:#2563eb; --accent:#10b981; }  
+    body{font-family:system-ui,Arial;margin:0;padding:20px;background:var(--bg);color:var(--text)}  
+    .wrap{max-width:900px;margin:20px auto}  
+    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(0,0,0,0.06)}  
+    h1,h2{margin:0 0 8px 0}  
+    .muted{color:var(--muted)}  
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}  
+    .btn{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer}  
+    .btn-ghost{padding:10px 14px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:transparent;cursor:pointer}  
+    .summary{background:#fbfbff;padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.03);margin-top:12px}  
+    .success{text-align:center;padding:28px}  
+    .success h2{color:var(--brand)}  
+    input[type=email]{padding:8px;width:100%;max-width:400px;margin-top:6px;border:1px solid #ddd;border-radius:8px;}  
+  </style>  
+</head>  
+<body>  
+  <div class="wrap">  
+    <div class="card" id="mainCard">  
+      <h1>Complete payment</h1>  
+      <p class="muted">Review your order and pay securely with Paystack.</p>  
+      <div id="orderArea" class="summary" aria-live="polite"></div>  
+
+      <div class="row" style="margin-top:12px">  
+        <button id="payNow" class="btn">Pay now</button>  
+        <button id="goBack" class="btn-ghost">Back to shop</button>  
+      </div>  
+
+      <div id="status" style="margin-top:12px"></div>  
+    </div>  
+
+    <div id="successCard" class="card success hidden" style="display:none;margin-top:12px">  
+      <h2>Woohoo! Your order is on the move!</h2>  
+      <p class="muted">Get ready — DamiTools got you covered 🚚🎉</p>  
+      <div id="successDetails" style="margin-top:12px"></div>  
+      <div style="margin-top:16px"><button id="doneBtn" class="btn">Back to Home</button></div>  
+    </div>
+  </div>  
+
+  <!-- Paystack inline -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <script>  
+  /**********************
+   * Configuration
+   **********************/
+  const PAYSTACK_KEY = "pk_live_a7cf2c8bc42437f38fee38ffd85ba652cf518258";
+  const SERVER_VERIFY_ENDPOINT = "/verify-paystack"; 
+
+  const firebaseConfig = {  
+    apiKey: "5f5e473f148205f03d8a1a011a5e279384b88263",  
+    authDomain: "damitools.firebaseapp.com",  
+    projectId: "damitools",  
+    storageBucket: "damitools.appspot.com",  
+    messagingSenderId: "875796385681",  
+    appId: "1:875796385681:web:563ffc58665bdc94875430"  
+  };  
+
+  try { firebase.initializeApp(firebaseConfig); console.log("Firebase initialized (payment)"); }  
+  catch(e){ console.warn("Firebase init error", e); }  
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  /**********************
+   * Helpers
+   **********************/
+  function el(id){ return document.getElementById(id); }
+  function fmt(n){ return '₦' + Number(n).toLocaleString(); }
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  /**********************
+   * Load Cart
+   **********************/
+  const CART = JSON.parse(localStorage.getItem('damitools_cart')||'[]');
+  const DELIVERY = JSON.parse(localStorage.getItem('damitools_delivery')||'null');
+
+  if(!CART.length){
+    el('orderArea').innerHTML = '<div class="muted">Cart is empty. Return to shop to add items.</div>';
+  } else {
+    const total = CART.reduce((s,i)=>s + i.price * i.qty, 0);
+    const itemsHtml = CART.map(i=>`<div>${i.name} × ${i.qty} — ${fmt(i.price*i.qty)}</div>`).join('');
+    const deliveryHtml = DELIVERY 
+      ? `<div style="margin-top:8px" class="muted">Delivery: ${escapeHtml(DELIVERY.name)}, ${escapeHtml(DELIVERY.address)}, ${escapeHtml(DELIVERY.state)}</div>` 
+      : `<div class="muted">No delivery details provided.</div>`;
+    el('orderArea').innerHTML = `
+      ${itemsHtml}
+      <div style="margin-top:8px"><strong>Total:</strong> ${fmt(total)}</div>
+      ${deliveryHtml}
+      <div style="margin-top:12px">
+        <label for="userEmail" class="muted">Enter your email for receipt:</label><br>
+        <input id="userEmail" type="email" placeholder="you@example.com" required>
+      </div>
+    `;
+  }
+
+  /**********************
+   * Paystack flow
+   **********************/
+  el('goBack').addEventListener('click', ()=> location.href = 'index.html');
+
+  el('payNow').addEventListener('click', ()=>{
+    if(!CART.length){ alert('Cart is empty'); return; }
+
+    const total = CART.reduce((s,i)=>s + i.price * i.qty, 0);
+    const amountKobo = total * 100;
+    const inputEmail = el('userEmail') ? el('userEmail').value.trim() : '';
+
+    if(!inputEmail || !inputEmail.includes('@')){
+      alert('Please enter a valid email before proceeding.');
+      return;
+    }
+
+    const reference = 'DT-' + Date.now();
+
+    const handler = PaystackPop.setup({
+      key: PAYSTACK_KEY,
+      email: inputEmail,
+      amount: amountKobo,
+      currency: "NGN",
+      ref: reference,
+      metadata: {
+        custom_fields: [
+          { display_name: "Phone", variable_name: "phone", value: DELIVERY ? DELIVERY.phone : '' },
+          { display_name: "DeliveryAddress", variable_name: "delivery_address", value: DELIVERY ? DELIVERY.address : '' }
+        ]
+      },
+      callback: function(response){
+        const order = { 
+          id: Date.now(), 
+          ref: response.reference, 
+          items: CART, 
+          total: total, 
+          delivery: DELIVERY || null, 
+          email: inputEmail,
+          method: 'Paystack', 
+          createdAt: new Date().toISOString() 
+        };
+
+        const ordersLocal = JSON.parse(localStorage.getItem('damitools_orders')||'[]');
+        ordersLocal.push(order);
+        localStorage.setItem('damitools_orders', JSON.stringify(ordersLocal));
+
+        if(db){
+          db.collection('orders').add({
+            ref: response.reference,
+            items: order.items.map(i=>({id:i.id,name:i.name,qty:i.qty,price:i.price})),
+            total: order.total,
+            email: order.email,
+            delivery: order.delivery,
+            method: order.method,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(e=> console.warn('Firestore write failed', e));
+        }
+
+        finalizeSuccess(order);
+      },
+      onClose: function(){
+        alert('Payment cancelled. If you completed payment, contact support.');
+      }
+    });
+
+    handler.openIframe();
+  });
+
+  /**********************
+   * Success handler
+   **********************/
+  function finalizeSuccess(order){
+    localStorage.removeItem('damitools_cart');
+    el('mainCard').style.display = 'none';
+    const successCard = el('successCard');
+    successCard.style.display = 'block';
+    el('successDetails').innerHTML = `
+      <div><strong>Reference:</strong> ${escapeHtml(order.ref)}</div>
+      <div><strong>Email:</strong> ${escapeHtml(order.email)}</div>
+      <div><strong>Total:</strong> ${fmt(order.total)}</div>
+      <div style="margin-top:8px">${order.items.map(i=>escapeHtml(i.name)+' × '+i.qty).join('<br>')}</div>
+      ${order.delivery ? `<div style="margin-top:8px"><strong>Deliver to:</strong> ${escapeHtml(order.delivery.name)}, ${escapeHtml(order.delivery.address)}, ${escapeHtml(order.delivery.state)}</div>` : ''}
+    `;
+  }
+
+  el('doneBtn').addEventListener('click', ()=> location.href = 'index.html');
+  </script>  
+</body>  
+</html>
