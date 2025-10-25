@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DamiTools — Products</title>
+  <meta name="description" content="Browse quality tools and equipment on DamiTools" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: system-ui, Arial; background: #f7f8fa; margin: 0; color: #111; }
+    header { background: #2563eb; color: #fff; padding: 16px 20px; text-align: center; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+    .product-card {
+      background: #fff;
+      border: 1px solid #e4e4e4;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      padding: 14px;
+      text-align: center;
+      transition: all .2s ease-in-out;
+    }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .product-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    h3 { font-size: 1rem; margin: 10px 0 4px; }
+    p.price { font-weight: bold; color: #10b981; margin: 0 0 8px; }
+    .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .back-link { display: inline-block; margin-top: 16px; color: #2563eb; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DamiTools Products</h1>
+  </header>
+
+  <div class="container">
+    <div id="productList" class="grid">
+      <!-- ✅ Products will appear here -->
+    </div>
+    <a href="index.html" class="back-link">← Back to Home</a>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // ✅ Example Product List
+    const products = [
+      { id: 'p001', name: 'Electric Drill 500W', price: 18000, img: 'img/drill.jpg' },
+      { id: 'p002', name: 'Cordless Screwdriver', price: 9500, img: 'img/screwdriver.jpg' },
+      { id: 'p003', name: 'Multimeter Digital Tester', price: 6500, img: 'img/multimeter.jpg' },
+      { id: 'p004', name: 'Industrial Heat Gun', price: 12500, img: 'img/heatgun.jpg' },
+      { id: 'p005', name: 'Electric Soldering Iron', price: 3500, img: 'img/solder.jpg' },
+    ];
+
+    // ✅ Load into Page
+    const list = document.getElementById('productList');
+    list.innerHTML = products.map(p => `
+      <div class="product-card">
+        <img src="${p.img}" alt="${p.name}">
+        <h3>${p.name}</h3>
+        <p class="price">₦${p.price.toLocaleString()}</p>
+        <button class="btn" onclick="addToCart('${p.id}', '${p.name}', ${p.price})">Add to Cart</button>
+      </div>
+    `).join('');
+
+    // ✅ Add to Cart Function
+    function addToCart(id, name, price) {
+      const cart = JSON.parse(localStorage.getItem('damitools_cart') || '[]');
+      const existing = cart.find(i => i.id === id);
+      if (existing) existing.qty += 1;
+      else cart.push({ id, name, price, qty: 1 });
+      localStorage.setItem('damitools_cart', JSON.stringify(cart));
+      alert(`${name} added to cart ✅`);
+    }
+  </script>
+</body>
+</html>
