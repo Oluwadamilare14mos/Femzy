@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DamiTools — Account</title>
+  <meta name="description" content="Your DamiTools profile" />
+  <style>
+    :root{ --bg:#f6f7fb; --card:#fff; --text:#111; --muted:#666; --brand:#2563eb; --accent:#10b981; }
+    body{font-family:system-ui,Arial;margin:0;padding:20px;background:var(--bg);color:var(--text)}
+    .wrap{max-width:900px;margin:20px auto}
+    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(0,0,0,0.06)}
+    h1{margin:0 0 8px 0}
+    .muted{color:var(--muted)}
+    .profile-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+    .avatar{width:96px;height:96px;border-radius:12px;background:#eee;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .btn{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer}
+    .btn-ghost{padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:transparent;cursor:pointer}
+    input[type=file]{display:block;margin-top:8px}
+    .small{font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="profileCard">
+      <h1>Your profile</h1>
+      <p class="muted">Manage your account details for DamiTools.</p>
+
+      <div id="notSignedIn" style="display:none" class="card" >
+        <p class="muted">You are not signed in. <a href="login.html">Sign in</a> to access your profile.</p>
+      </div>
+
+      <div id="signedInArea" style="display:none">
+        <div class="profile-row" style="margin-top:12px">
+          <div class="avatar" id="avatarWrap">
+            <!-- image inserted here -->
+          </div>
+
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:12px">
+              <h2 id="displayName" style="margin:0">—</h2>
+              <button id="signOutBtn" class="btn-ghost">Sign out</button>
+            </div>
+            <div class="small" style="margin-top:6px">Email: <span id="emailText">—</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <label class="small">Upload profile photo (jpg/png, max 2MB)</label>
+          <input id="photoInput" type="file" accept="image/*">
+          <div style="margin-top:10px">
+            <button id="uploadBtn" class="btn">Upload photo</button>
+            <span id="uploadStatus" class="small" style="margin-left:10px"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase compat libs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+
+  <script>
+  // ====== CONFIG - match your other pages ======
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2lx1hb2qZsYaXrQhsUp7hepYu5nY3fgs",
+    authDomain: "damitools.firebaseapp.com",
+    projectId: "damitools",
+    storageBucket: "damitools.appspot.com",
+    messagingSenderId: "875796385681",
+    appId: "1:875796385681:web:563ffc58665bdc94875430"
+  };
+
+  try { firebase.initializeApp(firebaseConfig); }
+  catch(e){ console.warn('Firebase init error', e); }
+
+  const auth = firebase.auth();
+  const storage = firebase.storage();
+
+  // helpers
+  const el = id => document.getElementById(id);
+  const show = (id) => el(id).style.display = '';
+  const hide = (id) => el(id).style.display = 'none';
+
+  // get UI nodes
+  const avatarWrap = el('avatarWrap');
+  const displayNameEl = el('displayName');
+  const emailText = el('emailText');
+  const notSignedIn = el('notSignedIn');
+  const signedInArea = el('signedInArea');
+  const photoInput = el('photoInput');
+  const uploadBtn = el('uploadBtn');
+  const uploadStatus = el('uploadStatus');
+  const signOutBtn = el('signOutBtn');
+
+  // When auth state changes, update UI
+  auth.onAuthStateChanged(user=>{
+    if(!user){
+      // not signed in
+      hide('signedInArea');
+      show('notSignedIn');
+      return;
+    }
+    // signed in
+    hide('notSignedIn');
+    show('signedInArea');
+
+    // Determine display name: prefer displayName, otherwise use first part of email
+    let rawName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+    // keep just first name token
+    let firstName = rawName.split(/\s+/)[0];
+    // Capitalize first letter
+    firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+    displayNameEl.textContent = firstName;
+    emailText.textContent = user.email || '';
+
+    // Avatar: prefer user.photoURL (Google), otherwise a placeholder
+    const photoURL = user.photoURL || null;
+
+    renderAvatar(photoURL);
+  });
+
+  // Render avatar element (safe)
+  function renderAvatar(url){
+    avatarWrap.innerHTML = '';
+    if(url){
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'avatar';
+      avatarWrap.appendChild(img);
+    } else {
+      // placeholder initial
+      const span = document.createElement('div');
+      span.style.width = '100%';
+      span.style.height = '100%';
+      span.style.display = 'flex';
+      span.style.alignItems = 'center';
+      span.style.justifyContent = 'center';
+      span.style.fontSize = '28px';
+      span.style.color = '#666';
+      span.textContent = 'D';
+      avatarWrap.appendChild(span);
+    }
+  }
+
+  // Sign out
+  signOutBtn.addEventListener('click', ()=>{
+    auth.signOut().then(()=> location.href = 'index.html');
+  });
+
+  // Upload photo flow
+  uploadBtn.addEventListener('click', async ()=>{
+    if(!auth.currentUser){
+      alert('You must be signed in to upload a photo.');
+      return;
+    }
+    const file = photoInput.files[0];
+    if(!file){ alert('Choose an image file first.'); return; }
+    if(file.size > 2 * 1024 * 1024){ alert('Image too large. Max 2MB.'); return; }
+
+    uploadStatus.textContent = 'Uploading...';
+    uploadBtn.disabled = true;
+
+    try {
+      const uid = auth.currentUser.uid;
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `profile_photos/${uid}.${ext}`;
+      const ref = storage.ref(path);
+      await ref.put(file);
+      const url = await ref.getDownloadURL();
+
+      // update user profile with new photoURL
+      await auth.currentUser.updateProfile({ photoURL: url });
+      renderAvatar(url);
+      uploadStatus.textContent = 'Upload complete.';
+    } catch(err){
+      console.error(err);
+      alert('Upload failed. Try again.');
+      uploadStatus.textContent = 'Upload failed.';
+    } finally {
+      uploadBtn.disabled = false;
+      setTimeout(()=> uploadStatus.textContent = '', 3000);
+    }
+  });
+
+  // Redirect to login if not signed in after small delay (so UI updates)
+  setTimeout(()=> {
+    const user = auth.currentUser;
+    if(!user){
+      // leave visible link to login page
+      // (already shown above)
+    }
+  }, 500);
+
+  </script>
+</body>
+</html>
