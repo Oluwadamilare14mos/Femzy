@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DamiTools — Delivery Details</title>
+<style>
+  body{font-family:system-ui,Arial;margin:0;padding:18px;background:#f6f7fb;color:#111}
+  .card{max-width:720px;margin:24px auto;padding:18px;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.06)}
+  input,textarea,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #e6e6e6}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  button{padding:10px;border-radius:8px;border:none;background:#2563eb;color:#fff;cursor:pointer}
+  .muted{color:#666}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:720px;margin:12px auto}
+  .logo{font-weight:900;background:linear-gradient(135deg,#2563eb,#10b981);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:20px}
+</style>
+</head>
+<body>
+  <div class="topbar"><div class="logo">DamiTools</div><div><a href="index.html">← Back to shop</a></div></div>
+
+  <div class="card">
+    <h2>Delivery details</h2>
+    <p class="muted">Fill the delivery address for your order. We will use this address for shipping and contact.</p>
+
+    <div id="cartSummary" style="margin-bottom:12px;color:#333"></div>
+
+    <label>Full name</label>
+    <input id="inpName" placeholder="John Doe">
+
+    <div class="row">
+      <div>
+        <label>Phone number</label>
+        <input id="inpPhone" placeholder="08123456789">
+      </div>
+      <div>
+        <label>State</label>
+        <select id="inpState">
+          <option>Lagos</option>
+          <option>Abuja</option>
+          <option>Rivers</option>
+          <option>Oyo</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Address</label>
+    <textarea id="inpAddress" rows="3" placeholder="Street, area, near landmark"></textarea>
+
+    <label>Notes (optional)</label>
+    <textarea id="inpNotes" rows="2" placeholder="Leave at security / call on arrival"></textarea>
+
+    <div style="margin-top:12px;text-align:right">
+      <button id="continueToPay">Continue to Payment</button>
+    </div>
+  </div>
+
+  <!-- Firebase (so auth persists) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2lx1hb2qZsYaXrQhsUp7hepYu5nY3fgs",
+      authDomain: "damitools.firebaseapp.com",
+      projectId: "damitools",
+      storageBucket: "damitools.firebasestorage.app",
+      messagingSenderId: "875796385681",
+      appId: "1:875796385681:web:563ffc58665bdc94875430"
+    };
+    try { firebase.initializeApp(firebaseConfig); } catch(e){/* ignore if already initialized */ }
+    const auth = firebase.auth ? firebase.auth() : null;
+
+    // load cart
+    const cart = JSON.parse(localStorage.getItem('damitools_cart')||'[]');
+    const summary = cart.length ? cart.map(i=>`${i.name} × ${i.qty}`).join('<br>') + `<br><strong>Total:</strong> ₦${cart.reduce((s,i)=>s+i.price*i.qty,0).toLocaleString()}` : 'Cart empty';
+    document.getElementById('cartSummary').innerHTML = summary;
+
+    // prefill name/phone if logged in (if available)
+    if(auth){
+      auth.onAuthStateChanged(user=>{
+        if(user){
+          if(user.displayName) document.getElementById('inpName').value = user.displayName;
+          if(user.phoneNumber) document.getElementById('inpPhone').value = user.phoneNumber;
+        }
+      });
+    }
+
+    document.getElementById('continueToPay').addEventListener('click', ()=>{
+      const name = document.getElementById('inpName').value.trim();
+      const phone = document.getElementById('inpPhone').value.trim();
+      const address = document.getElementById('inpAddress').value.trim();
+      const state = document.getElementById('inpState').value;
+      const notes = document.getElementById('inpNotes').value.trim();
+
+      if(!name || !phone || !address){ alert('Please fill name, phone and address'); return; }
+
+      const delivery = { name, phone, address, state, notes };
+      localStorage.setItem('damitools_delivery', JSON.stringify(delivery));
+      location.href = 'payment.html';
+    });
+  </script>
+</body>
+</html>
