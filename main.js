@@ -38,73 +38,23 @@ function toast(msg, t=1600){
 }
 
 /* ============================
-   PRODUCTS: base + programmatic expansion with online images
+   PRODUCTS: Manual list only
    ============================ */
 const PRODUCTS_BASE = [
-  {id:1,  name:"18W POP Light", price:2500, cat:"Lighting"},
-  {id:2,  name:"12W POP Light", price:1800, cat:"Lighting"},
-  {id:3,  name:"6W POP Light",  price:1200, cat:"Lighting"},
-  {id:4,  name:"30W POP Light", price:4200, cat:"Lighting"},
-  {id:5,  name:"Chandelier (Modern)", price:35000, cat:"Lighting"},
-  {id:6,  name:"Dropping Light (3-Head)", price:22000, cat:"Lighting"},
-  {id:7,  name:"Lamp Holder", price:800, cat:"Lighting"},
-  {id:8,  name:"LED Spotlight", price:3000, cat:"Lighting"},
-  {id:9,  name:"Bulkhead 18W", price:4500, cat:"Lighting"},
-  {id:10, name:"Bulkhead 24W", price:6200, cat:"Lighting"},
-  {id:11, name:"Garden Light 18W", price:12000, cat:"Lighting"},
-  {id:12, name:"Garden Light 24W", price:15000, cat:"Lighting"},
-  {id:13, name:"LED Half-Moon", price:4800, cat:"Lighting"},
-  {id:20, name:"1-Gang Switch", price:1200, cat:"Switches & Sockets"},
-  {id:21, name:"2-Gang Switch", price:1800, cat:"Switches & Sockets"},
-  {id:22, name:"3-Gang Switch", price:2400, cat:"Switches & Sockets"},
-  {id:23, name:"4-Gang Switch", price:3000, cat:"Switches & Sockets"},
-  {id:24, name:"13A Single Socket", price:2200, cat:"Switches & Sockets"},
-  {id:25, name:"13A Double Socket", price:3200, cat:"Switches & Sockets"},
-  {id:26, name:"15A Socket", price:3500, cat:"Switches & Sockets"},
-  {id:27, name:"Water Heater Switch 20A", price:4200, cat:"Switches & Sockets"},
-  {id:28, name:"Water Heater Switch 45A", price:6500, cat:"Switches & Sockets"},
-  {id:29, name:"Cooker Unit", price:9000, cat:"Switches & Sockets"},
-  {id:40, name:"1mm Wire", price:3800, cat:"Wires & Cables"},
-  {id:41, name:"1.5mm Wire", price:4500, cat:"Wires & Cables"},
-  {id:42, name:"2.5mm Wire", price:7800, cat:"Wires & Cables"},
-  {id:43, name:"4mm Wire", price:11500, cat:"Wires & Cables"},
-  {id:44, name:"6mm Wire", price:16500, cat:"Wires & Cables"},
-  {id:45, name:"10mm Wire", price:24500, cat:"Wires & Cables"},
-  {id:60, name:"Knife Switch", price:2500, cat:"Electrical Tools"},
-  {id:61, name:"Fuse & Base", price:1200, cat:"Electrical Tools"},
-  {id:70, name:"DFB Single Phase", price:18500, cat:"DFB & Protection"},
-  {id:80, name:"25mm PVC Pipe", price:1500, cat:"Conduit & Boxes"},
-  {id:90, name:"60W Power Supply", price:8500, cat:"Power & Supply"},
-  {id:100,name:"Solar Light 100W", price:25000, cat:"Solar & Outdoor"},
-  {id:120,name:"Power Bank 20,000mAh", price:12000, cat:"Gadgets"},
-  {id:140,name:"Black Tape", price:500, cat:"Accessories"},
+  { id: 'p001', name: 'Single Socket', price: 2500, img: 'img/socket.jpg', cat: 'Switches & Sockets' },
+  { id: 'p002', name: 'Switch', price: 1500, img: 'img/switch.jpg', cat: 'Switches & Sockets' },
+  { id: 'p003', name: 'Black Tape', price: 500, img: 'img/tape.jpg', cat: 'Accessories' },
+  { id: 'p004', name: '1.5mm Wire', price: 4500, img: 'img/wire.jpg', cat: 'Wires & Cables' }
 ];
 
-(function buildFullProductList(){
-  const out = PRODUCTS_BASE.map(p => ({ ...p }));
-  const brands = ["Generic","Proline","SunBright","ElectroMax","Lumina","PowerCore","SafeLine","Apex","Nova","GlobalTech"];
-  let nextId = Math.max(...out.map(x=>x.id)) + 1;
-  function qstr(s){ return encodeURIComponent(String(s).replace(/\s+/g,' ').trim()); }
-  out.forEach(p=>{
-    const main = (p.name.split(/[()\-–,]/)[0].split(' ')[0] || p.name).replace(/[^a-zA-Z0-9 ]/g,'').trim();
-    p.img = `https://source.unsplash.com/800x600/?${qstr(p.name + ' ' + main)}`;
-  });
-  const namesPool = out.map(x => ({ k: (x.name.replace(/[^a-zA-Z0-9 ]/g,'').split(' ')[0] || 'item'), cat: x.cat }));
-  let i = 0;
-  while(out.length < 220){
-    const base = namesPool[i % namesPool.length];
-    const brand = brands[i % brands.length];
-    const nm = `${base.k} ${brand}`;
-    const cat = base.cat || "Misc";
-    const price = Math.max(150, Math.round(800 + Math.random()*75000));
-    const img = `https://source.unsplash.com/800x600/?${qstr(base.k + ' ' + brand)}`;
-    out.push({ id: nextId++, name: nm, price, cat, img });
-    i++;
-  }
-  STATE.products = out;
-  window.PRODUCTS = out;
-  console.log("Loaded products:", STATE.products.length);
-})();
+/* ============================
+   LOAD PRODUCTS
+   ============================ */
+// No auto generation — only manual products
+STATE.products = PRODUCTS_BASE;
+window.PRODUCTS = PRODUCTS_BASE;
+
+console.log("Loaded manual products:", STATE.products.length);
 
 /* ============================
    Render products
